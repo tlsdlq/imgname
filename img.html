@@ -1,88 +1,251 @@
 <!DOCTYPE html>
+
 <html lang="ko">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>이미지 이름 바꾸기</title>
+
+    <title>이미지 이름 일괄 변경</title>
+
     <style>
+
         body {
-            font-family: sans-serif;
+
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
             padding: 20px;
+
             max-width: 600px;
+
             margin: 0 auto;
+
+            line-height: 1.6;
+
         }
+
         #container {
+
             border: 1px solid #ccc;
+
             padding: 20px;
-            border-radius: 5px;
+
+            border-radius: 8px;
+
+            background-color: #f9f9f9;
+
         }
+
+        h2 {
+
+            text-align: center;
+
+            margin-top: 0;
+
+        }
+
         textarea {
+
             width: 100%;
+
             height: 150px;
+
             margin-bottom: 10px;
+
+            box-sizing: border-box; /* Ensures padding doesn't affect width */
+
         }
+
         button {
-            padding: 10px 15px;
+
+            display: block;
+
+            width: 100%;
+
+            padding: 12px 15px;
+
             cursor: pointer;
+
+            background-color: #007bff;
+
+            color: white;
+
+            border: none;
+
+            border-radius: 5px;
+
+            font-size: 16px;
+
         }
-        #imageFiles {
-            margin-bottom: 10px;
+
+        button:hover {
+
+            background-color: #0056b3;
+
         }
+
+        input[type="file"] {
+
+            margin-bottom: 15px;
+
+        }
+
+        p {
+
+            margin-top: 0;
+
+        }
+
     </style>
+
 </head>
+
 <body>
 
+
+
     <div id="container">
+
         <h2>이미지 이름 일괄 변경</h2>
 
-        <p>1. 아래 '이미지 선택' 버튼을 클릭하여 이름을 변경할 이미지 파일들을 선택하세요.</p>
+
+
+        <p>1. 아래 '이미지 선택' 버튼으로 이름을 바꿀 파일들을 선택하세요.</p>
+
         <input type="file" id="imageFiles" multiple accept="image/*">
 
+
+
         <p>2. 아래 텍스트 영역에 변경할 파일 이름을 한 줄에 하나씩 입력하세요.</p>
-        <textarea id="newNames" placeholder="예시:&#10;1&#10;2&#10;3&#10;4&#10;5"></textarea>
+
+        <textarea id="newNames" placeholder="예시:새로운 사진 1風景写真_002😄웃는얼굴파일-4"></textarea>
+
+
 
         <button onclick="renameAndDownload()">이름 변경 및 다운로드</button>
+
     </div>
 
+
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
+
+
     <script>
+
         function renameAndDownload() {
+
             const imageFiles = document.getElementById('imageFiles').files;
+
             const newNamesText = document.getElementById('newNames').value;
+
             const newNames = newNamesText.split('\n').filter(name => name.trim() !== '');
 
+
+
             if (imageFiles.length === 0) {
-                alert('이미지 파일을 선택해주세요.');
+
+                alert('이미지 파일을 먼저 선택해주세요.');
+
                 return;
+
             }
 
             if (newNames.length === 0) {
+
                 alert('새로운 파일 이름을 입력해주세요.');
+
                 return;
+
             }
+
+
+
+
+
+            const invalidNames = newNames.filter(name => name.includes('/'));
+
+            if (invalidNames.length > 0) {
+
+                alert('파일 이름에 슬래시(/)를 포함할 수 없습니다.\n\n[오류가 발생한 이름]\n' + invalidNames.join('\n'));
+
+                return;
+
+            }
+
+
+
+            const nameCounts = {};
+
+            newNames.forEach(name => {
+
+                nameCounts[name] = (nameCounts[name] || 0) + 1;
+
+            });
+
+            const duplicateNames = Object.keys(nameCounts).filter(name => nameCounts[name] > 1);
+
+            if (duplicateNames.length > 0) {
+
+                alert('파일 이름이 중복되었습니다. 중복된 이름은 하나만 남겨주세요.\n\n[중복된 이름]\n' + duplicateNames.join('\n'));
+
+                return;
+
+            }
+
+
 
             const loopCount = Math.min(imageFiles.length, newNames.length);
 
+
+
             if (imageFiles.length !== newNames.length) {
-                alert(`파일 ${imageFiles.length}개와 이름 ${newNames.length}개가 입력됐어요.\n이 중 앞에서 ${loopCount}개만 처리돼요.`);
+
+                alert(`파일 ${imageFiles.length}개와 이름 ${newNames.length}개가 입력되었습니다.\n두 목록의 공통된 개수인 ${loopCount}개만 처리됩니다.`);
+
             }
+
+
 
             const zip = new JSZip();
 
+
+
             for (let i = 0; i < loopCount; i++) {
+
                 const file = imageFiles[i];
-                const extension = file.name.split('.').pop();
-                const newFileName = `${newNames[i]}.${extension}`;
+
+                const extension = file.name.slice(file.name.lastIndexOf('.'));
+
+                const newFileName = `${newNames[i]}${extension}`;
+
                 zip.file(newFileName, file);
+
             }
 
+
+
             zip.generateAsync({ type: 'blob' }).then(function(content) {
-                saveAs(content, '이름변환완료.zip');
+
+                saveAs(content, '이름변환.zip');
+
             });
+
         }
+
     </script>
 
+
+
 </body>
+
 </html>
+
+
+
+
